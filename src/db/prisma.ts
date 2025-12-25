@@ -8,26 +8,22 @@ const globalForPrisma = globalThis as unknown as {
 // со старым экземпляром Prisma Client после перегенерации
 let prismaInstance: PrismaClient;
 
-if (process.env.NODE_ENV === 'production') {
-  // В продакшене (Vercel) используем Connection Pooling для serverless функций
-  // Преобразуем DATABASE_URL для использования pooler, если это еще не сделано
-  let databaseUrl = process.env.DATABASE_URL || '';
-  
-  // Если URL использует прямой порт 5432, преобразуем в pooler порт 6543
-  if (databaseUrl.includes(':5432/') && !databaseUrl.includes('?pgbouncer=true')) {
-    databaseUrl = databaseUrl.replace(':5432/', ':6543/') + '?pgbouncer=true&connection_limit=1';
-    console.log('🔄 Автоматическое преобразование в Connection Pooling URL');
-    console.log('⚠️  Рекомендуется использовать Connection Pooling URL из Supabase Dashboard');
+// Проверяем DATABASE_URL
+const databaseUrl = process.env.DATABASE_URL || '';
+
+if (databaseUrl) {
+  if (databaseUrl.includes(':6543/')) {
+    console.log('✅ Используется Connection Pooling URL (порт 6543)');
+  } else if (databaseUrl.includes(':5432/')) {
+    console.log('✅ Используется прямой URL (порт 5432)');
+    console.log('⚠️  Убедитесь, что Network Restrictions отключены в Supabase');
   }
-  
+}
+
+if (process.env.NODE_ENV === 'production') {
   // В продакшене используем глобальный кеш для оптимизации
   prismaInstance = globalForPrisma.prisma ?? new PrismaClient({
     log: ['error'],
-    datasources: databaseUrl && databaseUrl !== process.env.DATABASE_URL ? {
-      db: {
-        url: databaseUrl,
-      },
-    } : undefined,
   });
   if (!globalForPrisma.prisma) {
     globalForPrisma.prisma = prismaInstance;
