@@ -31,6 +31,19 @@ app.use((req, res, next) => {
   next();
 });
 
+// Корневой маршрут для проверки работоспособности
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    message: 'DIAR AI Server API',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/health',
+      api: '/api/*'
+    }
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
