@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db/prisma';
-import { Plan } from '@prisma/client';
+import { Plan, Role } from '@prisma/client';
 
 // Получить профиль пользователя (включая план)
 export async function getUserProfile(req: Request, res: Response) {
@@ -33,16 +33,22 @@ export async function getUserProfile(req: Request, res: Response) {
           name: userEmail.split('@')[0] || 'Пользователь',
           password: '', // В реальном приложении пароль хранится в Supabase
           plan: Plan.Free,
+          role: Role.user,
         },
         select: {
           id: true,
           email: true,
           name: true,
           plan: true,
+          role: true,
           createdAt: true,
           updatedAt: true,
         },
       });
+    }
+
+    if (!user) {
+      return res.status(500).json({ error: 'Не удалось создать или получить пользователя' });
     }
 
     res.json({
@@ -87,6 +93,7 @@ export async function updateUserPlan(req: Request, res: Response) {
           name: userEmail.split('@')[0] || 'Пользователь',
           password: '', // В реальном приложении пароль хранится в Supabase
           plan: plan as Plan,
+          role: Role.user,
         },
       });
     } else {
