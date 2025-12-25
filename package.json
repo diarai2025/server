@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Backend server for DIAR AI Marketing CRM",
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   },
   "main": "dist/index.js",
   "scripts": {
