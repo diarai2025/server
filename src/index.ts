@@ -17,6 +17,7 @@ import aiRoutes from './routes/ai.routes';
 import walletRoutes from './routes/wallet.routes';
 import supportRoutes from './routes/support.routes';
 import adminRoutes from './routes/admin.routes';
+import paymentRoutes from './routes/payment.routes';
 
 dotenv.config();
 
@@ -50,6 +51,7 @@ app.use('/api/ai', authMiddleware, aiRoutes);
 app.use('/api/wallet', authMiddleware, walletRoutes);
 app.use('/api/support', authMiddleware, supportRoutes);
 app.use('/api/admin', authMiddleware, adminRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Error handler
 app.use(errorHandler);

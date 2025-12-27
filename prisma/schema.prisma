@@ -8,14 +8,16 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String
-  password  String
-  plan      Plan     @default(Free)
-  role      Role     @default(user)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                   Int       @id @default(autoincrement())
+  email                String    @unique
+  name                 String
+  password             String
+  plan                 Plan      @default(Free)
+  role                 Role      @default(user)
+  subscriptionExpiresAt DateTime?
+  subscriptionAutoRenew Boolean  @default(true)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   @@map("users")
 }
@@ -223,4 +225,59 @@ enum SupportTicketPriority {
   medium
   high
   urgent
+}
+
+model Payment {
+  id                Int           @id @default(autoincrement())
+  userId            Int
+  plan              Plan
+  amount            Decimal       @db.Decimal(10, 2)
+  currency          String        @default("₸")
+  status            PaymentStatus @default(pending)
+  paymentMethod     String        @default("kaspi")
+  kaspiOrderId      String?
+  kaspiPaymentId    String?
+  walletTransactionId Int?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  paidAt            DateTime?
+
+  @@index([userId])
+  @@index([kaspiOrderId])
+  @@index([status])
+  @@map("payments")
+}
+
+model WalletTransaction {
+  id            Int             @id @default(autoincrement())
+  userId        Int
+  walletId      Int
+  type          TransactionType
+  amount        Decimal         @db.Decimal(10, 2)
+  balanceBefore Decimal         @db.Decimal(10, 2)
+  balanceAfter  Decimal         @db.Decimal(10, 2)
+  description   String?
+  paymentId     Int?
+  createdAt     DateTime        @default(now())
+
+  @@index([userId])
+  @@index([walletId])
+  @@index([paymentId])
+  @@map("wallet_transactions")
+}
+
+enum PaymentStatus {
+  pending
+  processing
+  completed
+  failed
+  cancelled
+  refunded
+}
+
+enum TransactionType {
+  deposit
+  withdrawal
+  subscription
+  refund
 }

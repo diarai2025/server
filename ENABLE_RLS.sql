@@ -18,6 +18,9 @@ ALTER TABLE "integrations" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "leads" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "deals" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "tasks" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "wallets" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "payments" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "wallet_transactions" ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
 -- ПОЛИТИКИ ДЛЯ ТАБЛИЦЫ users
@@ -408,4 +411,117 @@ USING (
     AND "users"."id"::text = auth.uid()::text
   )
 );
+
+-- ============================================
+-- ПОЛИТИКИ ДЛЯ ТАБЛИЦЫ wallets
+-- ============================================
+
+-- Пользователи могут видеть только свой кошелек
+CREATE POLICY "Users can view own wallet"
+ON "wallets"
+FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM "users"
+    WHERE "users"."id" = "wallets"."userId"
+    AND "users"."id"::text = auth.uid()::text
+  )
+);
+
+-- Пользователи могут создавать кошелек для себя
+CREATE POLICY "Users can create own wallet"
+ON "wallets"
+FOR INSERT
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM "users"
+    WHERE "users"."id" = "wallets"."userId"
+    AND "users"."id"::text = auth.uid()::text
+  )
+);
+
+-- Пользователи могут обновлять только свой кошелек
+CREATE POLICY "Users can update own wallet"
+ON "wallets"
+FOR UPDATE
+USING (
+  EXISTS (
+    SELECT 1 FROM "users"
+    WHERE "users"."id" = "wallets"."userId"
+    AND "users"."id"::text = auth.uid()::text
+  )
+);
+
+-- ============================================
+-- ПОЛИТИКИ ДЛЯ ТАБЛИЦЫ payments
+-- ============================================
+
+-- Пользователи могут видеть только свои платежи
+CREATE POLICY "Users can view own payments"
+ON "payments"
+FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM "users"
+    WHERE "users"."id" = "payments"."userId"
+    AND "users"."id"::text = auth.uid()::text
+  )
+);
+
+-- Пользователи могут создавать платежи для себя
+CREATE POLICY "Users can create own payments"
+ON "payments"
+FOR INSERT
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM "users"
+    WHERE "users"."id" = "payments"."userId"
+    AND "users"."id"::text = auth.uid()::text
+  )
+);
+
+-- Пользователи могут обновлять только свои платежи (только для определенных статусов)
+CREATE POLICY "Users can update own payments"
+ON "payments"
+FOR UPDATE
+USING (
+  EXISTS (
+    SELECT 1 FROM "users"
+    WHERE "users"."id" = "payments"."userId"
+    AND "users"."id"::text = auth.uid()::text
+  )
+  AND "payments"."status" IN ('pending', 'processing')
+);
+
+-- ============================================
+-- ПОЛИТИКИ ДЛЯ ТАБЛИЦЫ wallet_transactions
+-- ============================================
+
+-- Пользователи могут видеть только свои транзакции
+CREATE POLICY "Users can view own wallet transactions"
+ON "wallet_transactions"
+FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM "users"
+    WHERE "users"."id" = "wallet_transactions"."userId"
+    AND "users"."id"::text = auth.uid()::text
+  )
+);
+
+-- Пользователи могут создавать транзакции для себя (только через систему)
+-- Обычно транзакции создаются автоматически системой, но на всякий случай разрешаем
+CREATE POLICY "Users can create own wallet transactions"
+ON "wallet_transactions"
+FOR INSERT
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM "users"
+    WHERE "users"."id" = "wallet_transactions"."userId"
+    AND "users"."id"::text = auth.uid()::text
+  )
+);
+
+-- Транзакции обычно не обновляются и не удаляются после создания
+-- Но на всякий случай разрешаем обновление только для незавершенных транзакций
 

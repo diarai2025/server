@@ -401,3 +401,47 @@ export async function updateCurrency(req: Request, res: Response) {
   }
 }
 
+// Получить историю транзакций кошелька
+export async function getTransactions(req: Request, res: Response) {
+  try {
+    const userEmail = req.user?.email;
+
+    if (!userEmail) {
+      return res.status(401).json({ error: 'Email пользователя не предоставлен' });
+    }
+
+    // Ищем пользователя по email
+    const user = await prisma.user.findUnique({
+      where: { email: userEmail },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    // Ищем кошелек пользователя
+    const wallet = await prisma.wallet.findUnique({
+      where: { userId: user.id },
+    });
+
+    if (!wallet) {
+      return res.json({ transactions: [], total: 0 });
+    }
+
+    // Получаем транзакции кошелька
+    const transactions = await prisma.walletTransaction.findMany({
+      where: { walletId: wallet.id },
+      orderBy: { createdAt: 'desc' },
+      take: 100, // Ограничиваем последними 100 транзакциями
+    });
+
+    res.json({
+      transactions,
+      total: transactions.length,
+    });
+  } catch (error) {
+    console.error('Ошибка при получении истории транзакций:', error);
+    res.status(500).json({ error: 'Ошибка при получении истории транзакций' });
+  }
+}
+

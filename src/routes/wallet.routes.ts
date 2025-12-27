@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { getWallet, addFunds, withdrawFunds, updateCurrency } from '../controllers/wallet.controller';
+import { getWallet, addFunds, withdrawFunds, updateCurrency, getTransactions } from '../controllers/wallet.controller';
 import { validateBody } from '../middleware/validation.middleware';
 import { addFundsSchema, withdrawFundsSchema, updateCurrencySchema } from '../validations/schemas';
 
@@ -82,6 +82,9 @@ router.post('/withdraw', validateBody(withdrawFundsSchema), withdrawFunds);
 
 // PUT /api/wallet/currency - обновить валюту кошелька
 router.put('/currency', validateBody(updateCurrencySchema), updateCurrency);
+
+// GET /api/wallet/transactions - получить историю транзакций
+router.get('/transactions', asyncHandler(getTransactions));
 
 export default router;
 
